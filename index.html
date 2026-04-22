@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- PWA -->
+  <meta name="theme-color" content="#6366f1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KasirPro">
+
+  <title>KasirPro — Point of Sale</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" onerror="this.remove()">
+  <link rel="stylesheet" href="style.css?v=20260421">
+
+  <script>
+    // Early session check
+    window._earlySession = localStorage.getItem('kasirpro_session');
+  </script>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="screen active">
+  <div class="login-bg">
+    <div class="login-orb orb1"></div>
+    <div class="login-orb orb2"></div>
+    <div class="login-orb orb3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🛒</div>
+      <h1>KasirPro</h1>
+      <p>Point of Sale System</p>
+    </div>
+    <div class="login-form">
+      <div class="form-group">
+        <label>Nama Kasir</label>
+        <input type="text" id="loginName" placeholder="Masukkan nama Anda" value="Admin">
+      </div>
+      <div class="form-group">
+        <label>PIN</label>
+        <div class="pin-display" id="pinDisplay">
+          <span class="pin-dot" id="dot1"></span>
+          <span class="pin-dot" id="dot2"></span>
+          <span class="pin-dot" id="dot3"></span>
+          <span class="pin-dot" id="dot4"></span>
+        </div>
+        <div class="numpad">
+          <button class="num-btn" onclick="enterPin('1')">1</button>
+          <button class="num-btn" onclick="enterPin('2')">2</button>
+          <button class="num-btn" onclick="enterPin('3')">3</button>
+          <button class="num-btn" onclick="enterPin('4')">4</button>
+          <button class="num-btn" onclick="enterPin('5')">5</button>
+          <button class="num-btn" onclick="enterPin('6')">6</button>
+          <button class="num-btn" onclick="enterPin('7')">7</button>
+          <button class="num-btn" onclick="enterPin('8')">8</button>
+          <button class="num-btn" onclick="enterPin('9')">9</button>
+          <button class="num-btn clear-btn" onclick="clearPin()">⌫</button>
+          <button class="num-btn" onclick="enterPin('0')">0</button>
+          <button class="num-btn login-btn" onclick="doLogin()">✓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+
+  <!-- MAIN APP -->
+  <div id="mainApp" class="screen">
+
+
+  <!-- TOP NAV -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" title="Menu">
+        <span class="ham-line"></span>
+        <span class="ham-line"></span>
+        <span class="ham-line"></span>
+      </button>
+    </div>
+    <div class="nav-center">
+      <span id="storeName">Toko Saya</span>
+    </div>
+    <div class="nav-right">
+      <button id="printerNavBtn" class="icon-btn" onclick="connectBluetoothPrinter()" title="Hubungkan Printer Bluetooth" style="font-size:18px">🖨️</button>
+      <div class="cashier-badge" id="cashierBadge">
+        <span class="cashier-avatar" id="cashierInitial">A</span>
+        <span id="cashierName">Admin</span>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ===== TAB: DASHBOARD ===== -->
+  <div id="tab-dashboard-content" class="tab-content">
+    <div class="tab-page dashboard-page">
+
+      <!-- Header -->
+      <div class="dash-header">
+        <div>
+          <div class="dash-greeting" id="dashGreeting">Selamat Pagi 👋</div>
+          <div class="dash-date" id="dashDate"></div>
+        </div>
+        <div class="dash-header-right">
+          <button class="dark-mode-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Mode Gelap">🌙</button>
+          <div class="dash-cashier-info" id="dashCashierInfo"></div>
+        </div>
+      </div>
+
+      <!-- Stock Alert Banner -->
+      <div id="stockAlertBanner" class="stock-alert-banner" style="display:none">
+        <span class="alert-icon">⚠️</span>
+        <span id="stockAlertText"></span>
+        <button onclick="showTab('produk')">Lihat →</button>
+      </div>
+
+      <!-- Stats Today -->
+      <div class="dash-stats" id="dashStats"></div>
+
+      <!-- Charts Row -->
+      <div class="dash-charts">
+        <div class="dash-card">
+          <h3>📈 Omzet Per Jam (Hari Ini)</h3>
+          <canvas id="hourlyChart" height="160"></canvas>
+        </div>
+        <div class="dash-card">
+          <h3>📅 7 Hari Terbaik</h3>
+          <canvas id="weeklyChart" height="160"></canvas>
+        </div>
+      </div>
+
+      <!-- Best Day & Product -->
+      <div class="dash-row2">
+        <div class="dash-card">
+          <h3>🏆 Produk Terlaris Hari Ini</h3>
+          <div id="dashTopProducts"></div>
+        </div>
+        <div class="dash-card">
+          <h3>📊 Performa Minggu Ini</h3>
+          <div id="dashWeekStats"></div>
+        </div>
+      </div>
+
+      <!-- Hutang Rekap -->
+      <div class="dash-card" id="dashHutangCard">
+        <div class="dash-card-header">
+          <h3>💰 Rekap Hutang / Piutang</h3>
+          <button class="dash-link-btn" onclick="showTab('hutang')">Lihat Semua →</button>
+        </div>
+        <div id="dashHutangSummary"></div>
+        <div id="dashHutangList"></div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="dash-card">
+        <h3>⚡ Akses Cepat</h3>
+        <div class="quick-actions">
+          <button onclick="showTab('kasir')" class="qa-btn kasir">🧾 Buka Kasir</button>
+          <button onclick="showTab('produk')" class="qa-btn produk">📦 Kelola Produk</button>
+          <button onclick="showTab('laporan')" class="qa-btn laporan">📊 Lihat Laporan</button>
+          <button onclick="showTab('hutang')" class="qa-btn hutang">💰 Hutang/Piutang</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== TAB: KASIR ===== -->
+  <div id="tab-kasir-content" class="tab-content active">
+    <!-- Mobile tab switcher (only visible on small screens) -->
+    <div class="kasir-mobile-tabs">
+      <button class="kmt-btn active" id="kmtProduk" onclick="kasirMobileTab('produk')">🛒 Produk</button>
+      <button class="kmt-btn" id="kmtCart" onclick="kasirMobileTab('cart')">
+        🧾 Keranjang
+        <span class="cart-badge" id="cartBadge" style="display:none"></span>
+      </button>
+    </div>
+
+    <div class="kasir-layout">
+
+      <!-- LEFT: Product Grid -->
+      <div class="product-panel" id="kasirProdukPanel">
+        <div class="panel-header">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchProduk" placeholder="Cari produk / scan barcode..." oninput="filterProducts()">
+            <button class="scan-btn" onclick="openBarcodeScanner()" title="Scan Barcode">📷</button>
+          </div>
+          <div class="category-scroll" id="categoryList"></div>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+
+      <!-- RIGHT: Cart -->
+      <div class="cart-panel" id="kasirCartPanel">
+        <div class="cart-header">
+          <h3>🧾 Transaksi Baru</h3>
+          <div class="transaction-id" id="transId">#TRX-001</div>
+        </div>
+
+        
+
+        <div class="cart-items" id="cartItems"></div>
+
+        <div class="cart-footer">
+          <div class="subtotal-row">
+            <span>Subtotal</span>
+            <span id="subtotalAmt">Rp 0</span>
+          </div>
+          <!-- MEMBER -->
+          <div class="cart-extra-row" id="memberRow">
+            <span>👥 Member</span>
+            <div class="cart-extra-input">
+              <input type="text" id="memberInput" placeholder="Kode / No HP member..." oninput="searchMember()">
+              <button class="btn-icon-sm" id="clearMemberBtn" onclick="clearMember()" style="display:none" title="Hapus member">✕</button>
+            </div>
+          </div>
+          <div id="memberInfo" class="cart-info-strip member-strip" style="display:none"></div>
+
+          <!-- VOUCHER -->
+          <div class="cart-extra-row">
+            <span>🎁 Voucher</span>
+            <div class="cart-extra-input">
+              <input type="text" id="voucherInput" placeholder="Kode voucher..." style="text-transform:uppercase">
+              <button class="btn-icon-sm green" onclick="applyVoucher()" title="Pakai voucher">✓</button>
+            </div>
+          </div>
+          <div id="voucherInfo" class="cart-info-strip voucher-strip" style="display:none"></div>
+
+          <!-- REDEEM POINTS -->
+          <div class="cart-extra-row" id="redeemPointsRow" style="display:none">
+            <span>🎯 Tukar Poin</span>
+            <div class="cart-extra-input" style="flex-direction:column;align-items:flex-end;gap:2px">
+              <small id="availablePoints" style="color:var(--primary);font-weight:700"></small>
+              <input type="number" id="redeemPointsInput" placeholder="0" min="0" oninput="calcTotal()" style="width:90px;text-align:right">
+              <small style="color:var(--text-muted);font-size:10px">100 poin = Rp 1.000</small>
+            </div>
+          </div>
+
+          <!-- DISKON -->
+          <div class="discount-row">
+            <span>Diskon</span>
+            <div class="discount-input-wrap">
+              <input type="number" id="discountInput" placeholder="0" min="0" max="100" oninput="calcTotal()">
+              <span>%</span>
+            </div>
+          </div>
+          <div class="tax-row">
+            <span>Pajak (PPN 11%)</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="taxToggle" onchange="calcTotal()">
+              <span class="slider"></span>
+            </label>
+            <span id="taxAmt">Rp 0</span>
+          </div>
+          <div class="total-row">
+            <span>TOTAL</span>
+            <span id="totalAmt">Rp 0</span>
+          </div>
+
+          <div class="payment-section">
+            <label class="payment-label">Metode Bayar</label>
+            <div class="payment-methods">
+              <button class="pay-method active" id="pm-tunai" onclick="selectPayment('tunai')">💵 Tunai</button>
+              <button class="pay-method" id="pm-qris" onclick="selectPayment('qris')">📱 QRIS</button>
+              <button class="pay-method" id="pm-transfer" onclick="selectPayment('transfer')">🏦 Transfer</button>
+            </div>
+            <div id="cashInputWrap" class="cash-input-wrap">
+              <label>Uang Diterima</label>
+              <input type="number" id="cashInput" placeholder="0" oninput="calcChange()">
+              <div class="quick-cash" id="quickCash"></div>
+              <div class="change-row">
+                <span>Kembalian</span>
+                <span id="changeAmt" class="change-value">Rp 0</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="checkout-btn" onclick="checkout()">
+            <span>💳 BAYAR SEKARANG</span>
+          </button>
+          <div class="cart-action-row">
+            <button class="clear-cart-btn" onclick="clearCart()">🗑 Kosongkan</button>
+            <button class="cancel-trx-btn" onclick="cancelTransaction()">❌ Batalkan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PRODUK ===== -->
+  <div id="tab-produk-content" class="tab-content">
+    <div class="tab-page">
+      <div class="page-header">
+        <h2>📦 Manajemen Produk</h2>
+        <button class="btn-primary" onclick="openProductModal()">+ Tambah Produk</button>
+      </div>
+      <div class="stock-summary" id="stockSummary"></div>
+      <div class="data-controls">
+        <input type="text" class="search-input" id="searchProdukList" placeholder="🔍 Cari produk..." oninput="renderProductList()">
+        <select id="filterCategory" onchange="renderProductList()">
+          <option value="">Semua Kategori</option>
+        </select>
+      </div>
+      <div class="product-table-wrap">
+        <table class="data-table" id="productTable">
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Kategori</th>
+              <th>Harga</th>
+              <th>Stok</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="productTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: LAPORAN ===== -->
+  <div id="tab-laporan-content" class="tab-content">
+    <div class="tab-page">
+      <!-- ADMIN GATE -->
+      <div id="reportAdminGate" style="display:none">
+        <div class="admin-gate-card">
+          <div class="gate-icon">🔒</div>
+          <h3>Khusus Admin</h3>
+          <p>Laporan hanya dapat diakses oleh Admin.</p>
+        </div>
+      </div>
+
+      <div id="reportContent">
+        <div class="page-header">
+          <h2>📊 Laporan Penjualan</h2>
+          <div class="report-filters">
+            <button class="btn-secondary" onclick="openReturModal()" style="font-size:12px;padding:6px 12px">🔄 Proses Retur</button>
+            <button class="btn-secondary" onclick="openVoucherMgr()" style="font-size:12px;padding:6px 12px">🎁 Kelola Voucher</button>
+            <select id="reportPeriod" onchange="renderReport()">
+              <option value="today">Hari Ini</option>
+              <option value="week">7 Hari</option>
+              <option value="month">30 Hari</option>
+              <option value="all">Semua</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="report-header-card" id="reportHeader"></div>
+
+        <div class="export-bar">
+          <button class="btn-export excel" onclick="exportExcel()">📊 Export Excel</button>
+          <button class="btn-export pdf" onclick="exportPDF()">📄 Export PDF</button>
+        </div>
+
+        <div class="stats-grid" id="reportStats"></div>
+
+        <div class="chart-section">
+          <h3>📈 Grafik Penjualan</h3>
+          <canvas id="salesChart" height="200"></canvas>
+        </div>
+
+        <div class="report-section">
+          <h3>🏆 Produk Terlaris</h3>
+          <div id="topProducts"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>👥 Penjualan per Member</h3>
+          <div id="reportMemberContent"></div>
+        </div>
+
+        <div class="report-section">
+          <div class="section-header-row">
+            <h3>🧾 Riwayat Transaksi</h3>
+            <input type="text" id="trxSearch" placeholder="🔍 Cari ID / kasir / item..." 
+              oninput="filterTransactionList()" class="trx-search-input">
+          </div>
+          <div class="transaction-list" id="transactionList"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>❌ Transaksi Dibatalkan</h3>
+          <div class="transaction-list" id="cancelledList"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>💰 Rekap Hutang / Piutang</h3>
+          <div id="reportHutangContent"></div>
+        </div>
+
+        <div class="report-section">
+          <h3>📋 Rekap Pengeluaran / Biaya</h3>
+          <div id="reportExpensesContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: HUTANG/PIUTANG ===== -->
+  <div id="tab-hutang-content" class="tab-content">
+    <div class="tab-page">
+      <div class="page-header">
+        <h2>💰 Hutang / Piutang</h2>
+        <button class="btn-primary" onclick="openHutangModal()">+ Tambah</button>
+      </div>
+
+      <div class="hutang-summary" id="hutangSummary"></div>
+
+      <div class="hutang-tabs">
+        <button class="htab active" id="htab-semua" onclick="switchHutangTab('semua')">Semua</button>
+        <button class="htab" id="htab-hutang" onclick="switchHutangTab('hutang')">🔴 Hutang</button>
+        <button class="htab" id="htab-piutang" onclick="switchHutangTab('piutang')">🟢 Piutang</button>
+        <button class="htab" id="htab-lunas" onclick="switchHutangTab('lunas')">✅ Lunas</button>
+      </div>
+
+      <div id="hutangList"></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: PENGATURAN ===== -->
+  <div id="tab-pengaturan-content" class="tab-content">
+    <div class="tab-page">
+      <div class="page-header">
+        <h2>⚙️ Pengaturan</h2>
+      </div>
+
+      <div class="settings-sections">
+        <div class="settings-card">
+          <h3>🏪 Informasi Toko</h3>
+          <div class="form-group">
+            <label>Nama Toko</label>
+            <input type="text" id="settingStoreName" placeholder="Nama Toko Anda" oninput="saveSettings()">
+          </div>
+          <div class="form-group">
+            <label>Alamat</label>
+            <input type="text" id="settingAddress" placeholder="Alamat toko" oninput="saveSettings()">
+          </div>
+          <div class="form-group">
+            <label>No. Telepon</label>
+            <input type="text" id="settingPhone" placeholder="08xxxxxxxxxx" oninput="saveSettings()">
+          </div>
+          <div class="form-group">
+            <label>Footer Struk</label>
+            <input type="text" id="settingFooter" placeholder="Terima kasih telah berbelanja!" oninput="saveSettings()">
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>👥 Manajemen Kasir</h3>
+          <div id="cashierList"></div>
+          <div class="add-cashier-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nama Kasir *</label>
+                <input type="text" id="newCashierName" placeholder="Contoh: Budi">
+              </div>
+              <div class="form-group">
+                <label>PIN (4 angka) *</label>
+                <input type="number" id="newCashierPin" placeholder="1234" maxlength="4" max="9999">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Role</label>
+                <select id="newCashierRole">
+                  <option value="kasir">Kasir</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div class="form-group" style="justify-content:flex-end;display:flex;align-items:flex-end">
+                <button class="btn-primary" onclick="addCashier()" style="width:100%">+ Tambah Kasir</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>🗃️ Backup &amp; Restore Data</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+            Simpan file backup ke komputer Anda secara rutin. Data tersimpan di browser — backup penting agar tidak hilang.
+          </p>
+          <div class="backup-actions">
+            <button class="btn-backup export" onclick="exportData()">
+              <span class="bak-icon">📤</span>
+              <div>
+                <div class="bak-title">Export / Backup</div>
+                <div class="bak-sub">Simpan semua data ke file .json</div>
+              </div>
+            </button>
+            <button class="btn-backup import" onclick="importData()">
+              <span class="bak-icon">📥</span>
+              <div>
+                <div class="bak-title">Import / Restore</div>
+                <div class="bak-sub">Muat data dari file backup .json</div>
+              </div>
+            </button>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <button class="btn-danger" onclick="resetData()" style="width:100%">🗑 Reset Semua Data</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>📱 Install Aplikasi</h3>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+            Install KasirPro di HP atau komputer untuk akses lebih cepat tanpa buka browser.
+          </p>
+          <button id="pwaInstallBtn" class="btn-primary" onclick="installPWA()" style="width:100%;display:none;align-items:center;justify-content:center;gap:8px">
+            📲 Install KasirPro ke HP / Komputer
+          </button>
+          <div class="install-steps">
+            <div class="step"><span class="step-num">Android</span> Buka di Chrome → menu ⋮ → "Tambahkan ke layar utama"</div>
+            <div class="step"><span class="step-num">iPhone</span> Buka di Safari → ikon bagikan □↑ → "Tambahkan ke Layar Utama"</div>
+            <div class="step"><span class="step-num">Komputer</span> Buka di Chrome → ikon install di address bar, atau gunakan tombol di atas</div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>ℹ️ Tentang Aplikasi</h3>
+          <p class="about-text">KasirPro v1.0.0<br>Point of Sale System<br>Data tersimpan di browser (localStorage)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- ===== TAB: MEMBER ===== -->
+<div id="tab-member-content" class="tab-content">
+  <div class="tab-page">
+    <div class="page-header">
+      <h2>👥 Member & Loyalitas</h2>
+      <button class="btn-primary" onclick="openMemberModal()">+ Tambah Member</button>
+    </div>
+    <div class="member-tier-legend">
+      <span>🥉 Bronze &lt;Rp300rb</span><span>🥈 Silver &lt;Rp1jt</span><span>🥇 Gold &lt;Rp5jt</span><span>💎 Platinum ≥Rp5jt</span>
+    </div>
+    <div class="data-controls">
+      <input type="text" class="search-input" id="searchMemberList" placeholder="🔍 Cari member..." oninput="renderMemberList()">
+    </div>
+    <div id="memberListContent"></div>
+  </div>
+</div>
+
+<!-- ===== TAB: PENGELUARAN ===== -->
+<div id="tab-pengeluaran-content" class="tab-content">
+  <div class="tab-page">
+    <div class="page-header">
+      <h2>📋 Pengeluaran / Biaya</h2>
+      <button class="btn-primary" onclick="openExpenseModal()">+ Tambah</button>
+    </div>
+    <div id="expenseSummary"></div>
+    <div class="data-controls">
+      <select id="expensePeriod" onchange="renderExpenses()">
+        <option value="today">Hari Ini</option>
+        <option value="week">7 Hari</option>
+        <option value="month" selected>30 Hari</option>
+        <option value="all">Semua</option>
+      </select>
+      <select id="expenseCatFilter" onchange="renderExpenses()">
+        <option value="">Semua Kategori</option>
+      </select>
+    </div>
+    <div id="expenseList"></div>
+  </div>
+</div>
+
+<!-- ===== TAB: PURCHASE ORDER ===== -->
+<div id="tab-po-content" class="tab-content">
+  <div class="tab-page">
+    <div class="page-header">
+      <h2>📦 Purchase Order</h2>
+      <button class="btn-primary" onclick="openPOModal()">+ Buat PO</button>
+    </div>
+    <div class="po-filter-tabs">
+      <button class="htab active" id="ptab-all" onclick="switchPOTab('all')">Semua</button>
+      <button class="htab" id="ptab-pending" onclick="switchPOTab('pending')">⏳ Pending</button>
+      <button class="htab" id="ptab-received" onclick="switchPOTab('received')">✅ Diterima</button>
+      <button class="htab" id="ptab-cancelled" onclick="switchPOTab('cancelled')">❌ Batal</button>
+    </div>
+    <div id="poList"></div>
+  </div>
+</div>
+
+<!-- ===== TAB: SHIFT ===== -->
+<div id="tab-shift-content" class="tab-content">
+  <div class="tab-page">
+    <div class="page-header"><h2>⏰ Manajemen Shift</h2></div>
+    <div id="shiftCurrentCard"></div>
+    <div id="shiftHistoryList"></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ===== MODAL: PRODUCT FORM ===== -->
+<div id="productModal" class="modal-overlay" onclick="closeModalOutside(event,'productModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="productModalTitle">Tambah Produk</h3>
+      <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editProductId">
+      <div class="form-group">
+        <label>Nama Produk *</label>
+        <input type="text" id="prodNama" placeholder="Nama produk">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategori *</label>
+          <input type="text" id="prodKategori" placeholder="Makanan / Minuman / dll" list="kategoriList">
+          <datalist id="kategoriList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Kode Produk</label>
+          <input type="text" id="prodKode" placeholder="SKU-001">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Harga Jual *</label>
+          <input type="number" id="prodHarga" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Harga Modal</label>
+          <input type="number" id="prodModal" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Stok</label>
+          <input type="number" id="prodStok" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Stok Minimum</label>
+          <input type="number" id="prodMinStok" placeholder="5" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Icon Produk</label>
+
+        <!-- Preview -->
+        <div class="icon-preview-wrap">
+          <div class="icon-preview" id="iconPreview">📦</div>
+          <div class="icon-preview-label">Tampilan Icon</div>
+        </div>
+
+        <!-- Tab switch -->
+        <div class="icon-tabs">
+          <button type="button" class="icon-tab active" id="tabEmoji" onclick="switchIconTab('emoji')">😊 Emoji</button>
+          <button type="button" class="icon-tab" id="tabUpload" onclick="switchIconTab('upload')">🖼️ Upload Gambar</button>
+        </div>
+
+        <!-- EMOJI PANEL -->
+        <div id="iconPanelEmoji">
+          <div class="emoji-search-wrap">
+            <input type="text" id="emojiSearch" placeholder="🔍 Cari emoji..." oninput="filterEmoji()">
+          </div>
+          <div class="emoji-categories" id="emojiCats"></div>
+          <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+
+        <!-- UPLOAD PANEL -->
+        <div id="iconPanelUpload" style="display:none">
+          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imgFileInput').click()"
+               ondragover="event.preventDefault(); this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleImageDrop(event)">
+            <div class="upload-icon">📂</div>
+            <p>Klik atau drag foto produk ke sini</p>
+            <small>JPG, PNG, WEBP — maks 2MB</small>
+          </div>
+          <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="handleImageFile(event)">
+          <div id="uploadedImgPreview" style="display:none" class="uploaded-preview">
+            <img id="uploadedImg" src="" alt="preview">
+            <button type="button" class="remove-img-btn" onclick="removeUploadedImg()">✕ Hapus</button>
+          </div>
+        </div>
+
+        <!-- Hidden values -->
+        <input type="hidden" id="prodEmoji">
+        <input type="hidden" id="prodImage">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('productModal')">Batal</button>
+      <button class="btn-primary" onclick="saveProduct()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: CHECKOUT / STRUK ===== -->
+<div id="receiptModal" class="modal-overlay" onclick="closeModalOutside(event,'receiptModal')">
+  <div class="modal-card receipt-card">
+    <div class="modal-header">
+      <h3>✅ Transaksi Berhasil!</h3>
+      <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt" id="receiptContent"></div>
+    </div>
+    <div class="modal-footer" style="flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px">
+        <span id="printerStatus" class="printer-status">○ Tidak terhubung</span>
+        <button id="printerConnectBtn" class="btn-secondary" style="font-size:11px;padding:6px 10px" onclick="connectBluetoothPrinter()">🖨️ Hubungkan Printer</button>
+      </div>
+      <div style="display:flex;gap:8px;width:100%">
+        <button class="btn-secondary" style="flex:1" onclick="printReceipt()">🖨️ Cetak Struk</button>
+        <button class="btn-primary" style="flex:1" onclick="newTransaction()">🆕 Transaksi Baru</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: TRANSACTION DETAIL ===== -->
+<div id="trxDetailModal" class="modal-overlay" onclick="closeModalOutside(event,'trxDetailModal')">
+  <div class="modal-card receipt-card">
+    <div class="modal-header">
+      <h3>🧾 Detail Transaksi</h3>
+      <button class="modal-close" onclick="closeModal('trxDetailModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="receipt" id="trxDetailContent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('trxDetailModal')">Tutup</button>
+      <button class="btn-primary" id="reprintBtn" onclick="">🖨️ Cetak Ulang</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL: ADMIN PIN CONFIRM ===== -->
+<div id="adminPinModal" class="modal-overlay">
+  <div class="modal-card admin-pin-card">
+    <div class="modal-header">
+      <h3>🔐 Konfirmasi Admin</h3>
+      <button class="modal-close" onclick="closeAdminPinModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="admin-pin-info">
+        <div class="admin-pin-icon">⚠️</div>
+        <p id="adminPinMessage">Masukkan PIN Admin untuk melanjutkan</p>
+      </div>
+      <div class="admin-pin-display" id="adminPinDisplay">
+        <span class="pin-dot" id="adot1"></span>
+        <span class="pin-dot" id="adot2"></span>
+        <span class="pin-dot" id="adot3"></span>
+        <span class="pin-dot" id="adot4"></span>
+      </div>
+      <div class="numpad admin-numpad">
+        <button class="num-btn" onclick="enterAdminPin('1')">1</button>
+        <button class="num-btn" onclick="enterAdminPin('2')">2</button>
+        <button class="num-btn" onclick="enterAdminPin('3')">3</button>
+        <button class="num-btn" onclick="enterAdminPin('4')">4</button>
+        <button class="num-btn" onclick="enterAdminPin('5')">5</button>
+        <button class="num-btn" onclick="enterAdminPin('6')">6</button>
+        <button class="num-btn" onclick="enterAdminPin('7')">7</button>
+        <button class="num-btn" onclick="enterAdminPin('8')">8</button>
+        <button class="num-btn" onclick="enterAdminPin('9')">9</button>
+        <button class="num-btn clear-btn" onclick="clearAdminPin()">⌫</button>
+        <button class="num-btn" onclick="enterAdminPin('0')">0</button>
+        <button class="num-btn login-btn" onclick="submitAdminPin()">✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: HUTANG/PIUTANG FORM ===== -->
+<div id="hutangModal" class="modal-overlay" onclick="closeModalOutside(event,'hutangModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="hutangModalTitle">Tambah Hutang/Piutang</h3>
+      <button class="modal-close" onclick="closeModal('hutangModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editHutangId">
+      <div class="form-group">
+        <label>Nama Pelanggan *</label>
+        <input type="text" id="hutangNama" placeholder="Nama pelanggan">
+      </div>
+      <div class="form-group">
+        <label>Jenis</label>
+        <div class="jenis-toggle">
+          <button type="button" class="jenis-btn active" id="jenis-hutang" onclick="selectJenis('hutang')">🔴 Hutang (pelanggan berhutang ke kita)</button>
+          <button type="button" class="jenis-btn" id="jenis-piutang" onclick="selectJenis('piutang')">🟢 Piutang (kita berhutang ke supplier)</button>
+        </div>
+        <input type="hidden" id="hutangJenis" value="hutang">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jumlah *</label>
+          <input type="number" id="hutangJumlah" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Jatuh Tempo</label>
+          <input type="date" id="hutangTempo">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Keterangan</label>
+        <input type="text" id="hutangKeterangan" placeholder="Contoh: Pembelian sembako">
+      </div>
+      <div class="form-group">
+        <label>No. HP</label>
+        <input type="text" id="hutangHp" placeholder="08xxxxxxxx">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('hutangModal')">Batal</button>
+      <button class="btn-primary" onclick="saveHutang()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: BAYAR HUTANG ===== -->
+<div id="bayarModal" class="modal-overlay" onclick="closeModalOutside(event,'bayarModal')">
+  <div class="modal-card" style="max-width:360px">
+    <div class="modal-header">
+      <h3>💳 Catat Pembayaran</h3>
+      <button class="modal-close" onclick="closeModal('bayarModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bayarHutangId">
+      <div id="bayarInfo" class="bayar-info"></div>
+      <div class="form-group">
+        <label>Jumlah Bayar</label>
+        <input type="number" id="bayarJumlah" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Catatan</label>
+        <input type="text" id="bayarCatatan" placeholder="Opsional">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('bayarModal')">Batal</button>
+      <button class="btn-primary" onclick="saveBayar()">Catat Pembayaran</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: BARCODE SCANNER ===== -->
+<div id="barcodeModal" class="modal-overlay" onclick="closeModalOutside(event,'barcodeModal')">
+  <div class="modal-card" style="max-width:400px">
+    <div class="modal-header">
+      <h3>📷 Scan Barcode Produk</h3>
+      <button class="modal-close" onclick="closeBarcodeScanner()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="scanner-wrap">
+        <video id="scannerVideo" autoplay playsinline></video>
+        <div class="scanner-overlay">
+          <div class="scanner-line"></div>
+          <div class="scanner-corners"></div>
+        </div>
+      </div>
+      <div id="scannerStatus" class="scanner-status">📷 Arahkan kamera ke barcode produk</div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Atau ketik kode produk manual</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="manualBarcode" placeholder="Ketik SKU/kode produk..." style="flex:1">
+          <button class="btn-primary" onclick="searchByBarcode()">Cari</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: MEMBER ===== -->
+<div id="memberModal" class="modal-overlay" onclick="closeModalOutside(event,'memberModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="memberModalTitle">Tambah Member</h3>
+      <button class="modal-close" onclick="closeModal('memberModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editMemberId">
+      <div class="form-row">
+        <div class="form-group"><label>Nama *</label><input type="text" id="mNama" placeholder="Nama lengkap"></div>
+        <div class="form-group"><label>No HP *</label><input type="text" id="mPhone" placeholder="08xxxxxxxx"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Kode Member</label><input type="text" id="mCode" placeholder="Auto jika kosong" style="text-transform:uppercase"></div>
+        <div class="form-group"><label>Diskon Member %</label><input type="number" id="mDiscount" placeholder="0" min="0" max="50"></div>
+      </div>
+      <div class="form-group"><label>Poin Awal</label><input type="number" id="mPoints" placeholder="0" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('memberModal')">Batal</button>
+      <button class="btn-primary" onclick="saveMember()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: VOUCHER (in Pengaturan - opened via JS) ===== -->
+<div id="voucherModal" class="modal-overlay" onclick="closeModalOutside(event,'voucherModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>🎁 Tambah Voucher/Promo</h3>
+      <button class="modal-close" onclick="closeModal('voucherModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Kode Voucher *</label><input type="text" id="vCode" placeholder="DISKON20" style="text-transform:uppercase"></div>
+        <div class="form-group"><label>Nama Promo</label><input type="text" id="vName" placeholder="Diskon Lebaran"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jenis Diskon</label>
+          <select id="vType">
+            <option value="percent">Persen (%)</option>
+            <option value="fixed">Nominal (Rp)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Nilai *</label><input type="number" id="vValue" placeholder="0" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Min. Belanja</label><input type="number" id="vMinOrder" placeholder="0"></div>
+        <div class="form-group"><label>Maks. Penggunaan</label><input type="number" id="vMaxUse" placeholder="Tak terbatas"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Berlaku Dari</label><input type="date" id="vFrom"></div>
+        <div class="form-group"><label>Berlaku Sampai</label><input type="date" id="vTo"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('voucherModal')">Batal</button>
+      <button class="btn-primary" onclick="saveVoucher()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: EXPENSE ===== -->
+<div id="expenseModal" class="modal-overlay" onclick="closeModalOutside(event,'expenseModal')">
+  <div class="modal-card" style="max-width:400px">
+    <div class="modal-header">
+      <h3>📋 Catat Pengeluaran</h3>
+      <button class="modal-close" onclick="closeModal('expenseModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Kategori</label>
+        <select id="expCat">
+          <option>Gaji/Upah</option><option>Sewa</option><option>Listrik/Air</option>
+          <option>Bahan Baku</option><option>Transportasi</option><option>Lain-lain</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Keterangan *</label><input type="text" id="expDesc" placeholder="Contoh: Bayar listrik bulan ini"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Jumlah *</label><input type="number" id="expAmount" placeholder="0" min="0"></div>
+        <div class="form-group"><label>Tanggal</label><input type="date" id="expDate"></div>
+      </div>
+      <div class="form-group"><label>Dibayar Oleh</label><input type="text" id="expPaid" placeholder="Nama kasir/pemilik"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('expenseModal')">Batal</button>
+      <button class="btn-primary" onclick="saveExpense()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: PURCHASE ORDER ===== -->
+<div id="poModal" class="modal-overlay" onclick="closeModalOutside(event,'poModal')">
+  <div class="modal-card" style="max-width:560px">
+    <div class="modal-header">
+      <h3>📦 Buat Purchase Order</h3>
+      <button class="modal-close" onclick="closeModal('poModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Supplier</label><input type="text" id="poSupplier" placeholder="Nama supplier"></div>
+        <div class="form-group"><label>Tanggal</label><input type="date" id="poDate"></div>
+      </div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="poNotes" placeholder="Opsional"></div>
+      <div class="po-items-header">
+        <strong>Daftar Produk</strong>
+        <button type="button" class="btn-sm green" onclick="addPOItem()">+ Tambah Produk</button>
+      </div>
+      <div id="poItemsContainer"></div>
+      <div class="po-total-row">
+        <span>Total PO:</span><strong id="poTotalDisplay">Rp 0</strong>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('poModal')">Batal</button>
+      <button class="btn-primary" onclick="savePO()">Buat PO</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RETUR ===== -->
+<div id="returModal" class="modal-overlay" onclick="closeModalOutside(event,'returModal')">
+  <div class="modal-card" style="max-width:480px">
+    <div class="modal-header">
+      <h3>🔄 Retur / Refund Barang</h3>
+      <button class="modal-close" onclick="closeModal('returModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>No. Transaksi Asli *</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="returTrxId" placeholder="Contoh: TRX-0001" style="flex:1">
+          <button class="btn-sm green" onclick="findReturTransaction()">Cari</button>
+        </div>
+      </div>
+      <div id="returTrxInfo" style="display:none"></div>
+      <div id="returItemsContainer" style="display:none">
+        <label style="font-weight:700;display:block;margin:10px 0 6px">Pilih Item yang Diretur:</label>
+        <div id="returItemsList"></div>
+        <div class="form-group" style="margin-top:10px">
+          <label>Alasan Retur</label>
+          <input type="text" id="returReason" placeholder="Barang rusak / tidak sesuai / ...">
+        </div>
+        <div class="form-group">
+          <label>Refund Metode</label>
+          <select id="returRefund">
+            <option value="tunai">Tunai</option>
+            <option value="kredit">Kredit (tambah poin)</option>
+            <option value="tukar">Tukar Barang</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('returModal')">Batal</button>
+      <button class="btn-primary" id="returSubmitBtn" style="display:none" onclick="saveRetur()">Proses Retur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: SHIFT OPEN ===== -->
+<div id="shiftOpenModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:360px">
+    <div class="modal-header"><h3>⏰ Buka Shift</h3></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Uang Kas Awal (Rp)</label><input type="number" id="shiftOpenCash" placeholder="0" min="0"></div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="shiftOpenNote" placeholder="Opsional"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('shiftOpenModal')">Batal</button>
+      <button class="btn-primary" onclick="doOpenShift()">Mulai Shift</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: SHIFT CLOSE ===== -->
+<div id="shiftCloseModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:400px">
+    <div class="modal-header"><h3>🔒 Tutup Shift</h3></div>
+    <div class="modal-body">
+      <div id="shiftCloseInfo"></div>
+      <div class="form-group"><label>Uang Kas Akhir (Rp)</label><input type="number" id="shiftCloseCash" placeholder="0" min="0"></div>
+      <div class="form-group"><label>Catatan</label><input type="text" id="shiftCloseNote" placeholder="Opsional"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('shiftCloseModal')">Batal</button>
+      <button class="btn-primary" onclick="doCloseShift()">Tutup Shift & Cetak Laporan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VOUCHER MANAGEMENT (in pengaturan - accessible from laporan or settings) ===== -->
+<div id="voucherMgrModal" class="modal-overlay" onclick="closeModalOutside(event,'voucherMgrModal')">
+  <div class="modal-card" style="max-width:600px">
+    <div class="modal-header">
+      <h3>🎁 Kelola Voucher & Promo</h3>
+      <button class="modal-close" onclick="closeModal('voucherMgrModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:right;margin-bottom:10px">
+        <button class="btn-primary" onclick="closeModal('voucherMgrModal');openVoucherModal()">+ Voucher Baru</button>
+      </div>
+      <div id="voucherMgrList"></div>
+    </div>
+  </div>
+</div>
+
+  <!-- SIDEBAR NAV -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">🛒 <span>KasirPro</span></div>
+      <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
+    </div>
+    <div class="sidebar-cashier" id="sidebarCashier">
+      <div class="sidebar-avatar" id="sidebarInitial">A</div>
+      <div>
+        <div class="sidebar-name" id="sidebarName">Admin</div>
+        <div class="sidebar-role" id="sidebarRole">admin</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item" id="tab-dashboard" onclick="showTab('dashboard');toggleSidebar()">
+        <span class="sidebar-icon">🏠</span><span>Dashboard</span>
+      </button>
+      <button class="sidebar-item active" id="tab-kasir" onclick="showTab('kasir');toggleSidebar()">
+        <span class="sidebar-icon">🧾</span><span>Kasir</span>
+      </button>
+      <button class="sidebar-item" id="tab-produk" onclick="showTab('produk');toggleSidebar()">
+        <span class="sidebar-icon">📦</span><span>Produk</span>
+      </button>
+      <button class="sidebar-item" id="tab-laporan" onclick="showTab('laporan');toggleSidebar()">
+        <span class="sidebar-icon">📊</span><span>Laporan</span>
+      </button>
+      <button class="sidebar-item" id="tab-member" onclick="showTab('member');toggleSidebar()">
+        <span class="sidebar-icon">👥</span><span>Member</span>
+      </button>
+      <button class="sidebar-item" id="tab-hutang" onclick="showTab('hutang');toggleSidebar()">
+        <span class="sidebar-icon">💰</span><span>Hutang</span>
+      </button>
+      <button class="sidebar-item" id="tab-pengeluaran" onclick="showTab('pengeluaran');toggleSidebar()">
+        <span class="sidebar-icon">📋</span><span>Biaya</span>
+      </button>
+      <button class="sidebar-item" id="tab-po" onclick="showTab('po');toggleSidebar()">
+        <span class="sidebar-icon">📦</span><span>Pembelian</span>
+      </button>
+      <button class="sidebar-item" id="tab-shift" onclick="showTab('shift');toggleSidebar()">
+        <span class="sidebar-icon">⏰</span><span>Shift</span>
+      </button>
+      <button class="sidebar-item" id="tab-pengaturan" onclick="showTab('pengaturan');toggleSidebar()">
+        <span class="sidebar-icon">⚙️</span><span>Pengaturan</span>
+      </button>
+    </nav>
+    <button class="sidebar-logout" onclick="logout()">⏏ Keluar</button>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="db.js?v=20260421"></script>
+  <script src="app.js?v=20260421"></script>
+
+  <script>
+  // Session restore inline
+  (function() {
+    var sid = localStorage.getItem('kasirpro_session');
+    if (!sid) return;
+    function tryRestore() {
+      if (typeof DB === 'undefined' || typeof applyLogin === 'undefined') return;
+      var cashiers = DB.getCashiers();
+      for (var i = 0; i < cashiers.length; i++) {
+        if (cashiers[i].id === sid) { applyLogin(cashiers[i]); return; }
+      }
+      localStorage.removeItem('kasirpro_session');
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', tryRestore);
+    } else {
+      tryRestore();
+    }
+  })();
+  </script>
+
+  <script>
+    // PWA install prompt
+    var deferredPrompt;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault(); deferredPrompt = e;
+      var btn = document.getElementById('pwaInstallBtn');
+      if (btn) btn.style.display = 'flex';
+    });
+    window.addEventListener('appinstalled', function() {
+      deferredPrompt = null;
+    });
+    function installPWA() {
+      if (!deferredPrompt) {
+        if (typeof showToast === 'function') showToast('Gunakan menu browser → Tambahkan ke layar utama', 'info');
+        return;
+      }
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
+    }
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        fetch('./sw.js', { method: 'HEAD' })
+          .then(function(r) { if (r.ok) navigator.serviceWorker.register('./sw.js'); })
+          .catch(function() {});
+      });
+    }
+  </script>
+
+</body>
+</html>
