@@ -25,7 +25,7 @@ Double-click **index.html** — beberapa fitur terbatas (font, PWA, Service Work
 ---
 
 ## Akses Online
-Buka: https://ptidssby199.github.io/kasir-pos/
+Buka: https://ptidssby199.github.io/kasirku
 
 ---
 
